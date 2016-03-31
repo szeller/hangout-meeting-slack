@@ -1,0 +1,16 @@
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+*.bak
+*.html
+*.json
+
+pids
+logs
+results
+
+npm-debug.log
+node_modules
