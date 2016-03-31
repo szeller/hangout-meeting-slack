@@ -1,0 +1,29 @@
+{
+  "name": "hangout-meeting-slack",
+  "version": "1.0.0",
+  "description": "slackbot to post hangout links for all of the meetings on your calendar",
+  "main": "hangouts.coffee",
+  "scripts": {
+    "test": "mocha --reporter spec test --compilers coffee:coffee-script/register"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/szeller/hangout-meeting-slack.git"
+  },
+  "author": "Shawn Zeller",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/szeller/hangout-meeting-slack/issues"
+  },
+  "homepage": "https://github.com/szeller/hangout-meeting-slack#readme",
+  "dependencies": {
+    "coffee": "^3.2.1",
+    "googleapis": "^4.0.0",
+    "slack-client": "^2.0.4",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
+  }
+}
