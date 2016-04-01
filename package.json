@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/szeller/hangout-meeting-slack#readme",
   "dependencies": {
-    "coffee": "^3.2.1",
+    "coffee-script": "^1.10.0",
     "cson": "^3.0.2",
     "google-auth-library": "^0.9.7",
     "googleapis": "^4.0.0",
