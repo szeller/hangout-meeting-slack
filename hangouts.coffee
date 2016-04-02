@@ -1,9 +1,9 @@
 nconf = require 'nconf'
 cson = require 'cson'
-_ = require 'underscore'
 moment = require 'moment'
 fs = require 'fs'
 readline = require 'readline'
+request = require 'request'
 
 google = require 'googleapis'
 googleAuth = require 'google-auth-library'
@@ -59,8 +59,9 @@ listEvents = (auth, callback) ->
   calendar.events.list 
     auth: auth
     calendarId: 'primary'
-    timeMin: (new Date()).toISOString()
-    maxResults: 10
+    timeMin: moment().toISOString()
+    timeMax: moment().endOf('day').toISOString()
+    maxResults: 25
     singleEvents: true
     orderBy: 'startTime'
   , (err, response) ->
@@ -75,8 +76,20 @@ authorize nconf.get('google'), (err, auth) ->
     return console.log err if err
     return console.log 'No upcoming events found.' if !events.length
 
-    console.log 'Upcoming 10 events:'
+    slackMessage = 
+      text: 'Here\'s your daily hangout meeting list'
+      attachments: for event in events 
+        start = moment(event.start.dateTime || event.start.date).format 'h:mm A' 
 
-    for event in events 
-      start = moment(event.start.dateTime || event.start.date).format 'MMMM Do YYYY, h:mm A' 
-      console.log "title: #{event.summary}\nstart: #{start}\nhangout: #{event.hangoutLink}"
+        title: "Hangout - #{event.summary}"
+        title_link: event.hangoutLink
+        text: start
+
+    request 
+      method: 'POST'
+      url: nconf.get('slack:webhook')
+      json: true
+      body: slackMessage
+    , (err, resp, body) ->
+      console.log err if err
+      console.log 'Done!'
