@@ -12,9 +12,9 @@ calendar = google.calendar 'v3'
 
 nconf.argv().env()
 nconf.use 'file',
-  file: 'config.cson'
+  file: "#{process.env.HOME}/.hangouts_meeting_bot.cson"
   format:
-    stringify : (s) -> cson.stringify s
+    stringify : (s) -> cson.createCSONString s, indent: '  '
     parse : (s) -> cson.parse s
 
 oauth2Client = ({clientId, clientSecret, redirectUri}) ->
@@ -48,10 +48,11 @@ getTokenIfNecessary = (client, scopes, token, callback) ->
     rl.close()
 
     client.getToken code, (err, token) ->
-      console.log "please save this token: "
-      console.dir token
 
-      callback err, token 
+      # save the token back to the config file before passing it on
+      nconf.set 'google:token', token
+      nconf.save (err) ->
+        callback err, token 
 
 # Lists the next 10 events on the user's primary calendar.
 listEvents = (auth, callback) ->
