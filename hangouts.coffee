@@ -1,6 +1,7 @@
 nconf = require 'nconf'
 cson = require 'cson'
 _ = require 'underscore'
+moment = require 'moment'
 fs = require 'fs'
 readline = require 'readline'
 
@@ -76,5 +77,5 @@ authorize nconf.get('google'), (err, auth) ->
     console.log 'Upcoming 10 events:'
 
     for event in events 
-      start = event.start.dateTime || event.start.date
+      start = moment(event.start.dateTime || event.start.date).format 'MMMM Do YYYY, h:mm A' 
       console.log "title: #{event.summary}\nstart: #{start}\nhangout: #{event.hangoutLink}"
