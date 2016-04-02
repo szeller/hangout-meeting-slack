@@ -6,6 +6,9 @@
   "scripts": {
     "test": "mocha --reporter spec test --compilers coffee:coffee-script/register"
   },
+  "bin": {
+    "hangout_meeting_bot": "./bin/hangout_meeting_bot"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/szeller/hangout-meeting-slack.git"
