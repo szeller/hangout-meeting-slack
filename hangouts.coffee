@@ -1,10 +1,8 @@
 nconf = require 'nconf'
+cson = require 'cson'
+_ = require 'underscore'
 fs = require 'fs'
 readline = require 'readline'
-
-# S = require 'string' 
-_ = require 'underscore'
-cson = require 'cson'
 
 google = require 'googleapis'
 googleAuth = require 'google-auth-library'
@@ -18,28 +16,28 @@ nconf.use 'file',
     stringify : (s) -> cson.stringify s
     parse : (s) -> cson.parse s
 
-googleConf = nconf.get 'google'
-SCOPES = googleConf.scopes
+oauth2Client = ({clientId, clientSecret, redirectUri}) ->
+  auth = new googleAuth
+  new auth.OAuth2 clientId, clientSecret, redirectUri
 
 # Create an OAuth2 client with the given credentials, and then execute the given callback function.
-authorize = ({clientId, clientSecret, redirectUri}, token, callback) ->
-  auth = new googleAuth
-  oauth2Client = new auth.OAuth2 clientId, clientSecret, redirectUri
+authorize = ({credentials, token, scopes}, callback) ->
+  client = oauth2Client credentials
 
-  return getNewToken oauth2Client, callback if !token
-
-  oauth2Client.credentials = token
-  callback null, oauth2Client
-
+  getTokenIfNecessary client, scopes, token, (err, token) ->
+    client.credentials = token
+    callback null, client
 
 # Get and store new token after prompting for user authorization, and then
 # execute the given callback with the authorized OAuth2 client.
-getNewToken = (oauth2Client, callback) ->
-  authUrl = oauth2Client.generateAuthUrl
-    access_type: 'offline'
-    scope: SCOPES
+getTokenIfNecessary = (client, scopes, token, callback) ->
+  return callback null, token if token
 
-  console.log "Authorize this app by visiting this url: #{authUrl}"
+  authUrl = client.generateAuthUrl
+    access_type: 'offline'
+    scope: scopes
+
+  console.log "Authorize this app by visiting this url: \n#{authUrl}"
 
   rl = readline.createInterface
     input: process.stdin,
@@ -48,12 +46,11 @@ getNewToken = (oauth2Client, callback) ->
   rl.question 'Enter the code from that page here: ', (code) ->
     rl.close()
 
-    oauth2Client.getToken code, (err, token) ->
-      oauth2Client.credentials = token
-      console.log "token is :"
+    client.getToken code, (err, token) ->
+      console.log "please save this token: "
       console.dir token
 
-      callback err, oauth2Client 
+      callback err, token 
 
 # Lists the next 10 events on the user's primary calendar.
 listEvents = (auth, callback) ->
@@ -68,9 +65,8 @@ listEvents = (auth, callback) ->
     return callback err if err
     callback null, response.items
 
-
 # Authorize a client with the loaded credentials, then call the Google Calendar API.
-authorize googleConf.credentials, googleConf.token, (err, auth) ->
+authorize nconf.get('google'), (err, auth) ->
   return console.log err if err
 
   listEvents auth, (err, events) ->
@@ -80,7 +76,5 @@ authorize googleConf.credentials, googleConf.token, (err, auth) ->
     console.log 'Upcoming 10 events:'
 
     for event in events 
-      console.dir event
-      # start = event.start.dateTime || event.start.date
-      # console.log "#{start} - #{event.summary}"
-
+      start = event.start.dateTime || event.start.date
+      console.log "title: #{event.summary}\nstart: #{start}\nhangout: #{event.hangoutLink}"
