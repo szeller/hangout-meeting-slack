@@ -4,6 +4,7 @@ moment = require 'moment'
 fs = require 'fs'
 readline = require 'readline'
 request = require 'request'
+momentParser = require('moment-parser').parseMoment
 
 google = require 'googleapis'
 googleAuth = require 'google-auth-library'
@@ -60,13 +61,17 @@ listEvents = (auth, callback) ->
     auth: auth
     calendarId: 'primary'
     timeMin: moment().toISOString()
-    timeMax: moment().endOf('day').toISOString()
+    timeMax: computeEndDate().toISOString()
     maxResults: 25
     singleEvents: true
     orderBy: 'startTime'
   , (err, response) ->
     return callback err if err
     callback null, response.items
+
+computeEndDate = () ->
+  endString = nconf.stores.argv.store._?[0]
+  if endString then momentParser endString else moment().endOf 'day'
 
 # Authorize a client with the loaded credentials, then call the Google Calendar API.
 authorize nconf.get('google'), (err, auth) ->
@@ -75,6 +80,10 @@ authorize nconf.get('google'), (err, auth) ->
   listEvents auth, (err, events) ->
     return console.log err if err
     return console.log 'No upcoming events found.' if !events.length
+
+    # for event in events 
+    #   start = moment(event.start.dateTime || event.start.date).format 'h:mm A' 
+    #   console.log "Hangout - #{event.summary} - #{start}"
 
     slackMessage = 
       text: 'Here\'s your daily hangout meeting list'
