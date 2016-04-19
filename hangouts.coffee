@@ -5,6 +5,7 @@ fs = require 'fs'
 readline = require 'readline'
 request = require 'request'
 momentParser = require('moment-parser').parseMoment
+_ = require 'underscore'
 
 google = require 'googleapis'
 googleAuth = require 'google-auth-library'
@@ -55,19 +56,27 @@ getTokenIfNecessary = (client, scopes, token, callback) ->
       nconf.save (err) ->
         callback err, token 
 
-# Lists the next 10 events on the user's primary calendar.
+# Lists the next 25 events that fall before the given end date
 listEvents = (auth, callback) ->
+  start = moment().add(1, 'minutes')
+  end = computeEndDate()
+
   calendar.events.list 
     auth: auth
     calendarId: 'primary'
-    timeMin: moment().toISOString()
-    timeMax: computeEndDate().toISOString()
+    timeMin: start.toISOString()
+    timeMax: end.toISOString()
     maxResults: 25
     singleEvents: true
     orderBy: 'startTime'
   , (err, response) ->
     return callback err if err
-    callback null, response.items
+
+    events = _.filter response.items, (event) ->
+      event.moment = moment event.start.dateTime || event.start.date 
+      event.moment.isBetween start, end
+
+    callback null, events
 
 computeEndDate = () ->
   endString = nconf.stores.argv.store._?[0]
@@ -79,20 +88,16 @@ authorize nconf.get('google'), (err, auth) ->
 
   listEvents auth, (err, events) ->
     return console.log err if err
-    return console.log 'No upcoming events found.' if !events.length
+    return if !events.length
 
     # for event in events 
-    #   start = moment(event.start.dateTime || event.start.date).format 'h:mm A' 
-    #   console.log "Hangout - #{event.summary} - #{start}"
+    #   console.log "Hangout - #{event.summary} - #{event.moment.format 'h:mm A'}"
 
     slackMessage = 
-      text: 'Here\'s your daily hangout meeting list'
       attachments: for event in events 
-        start = moment(event.start.dateTime || event.start.date).format 'h:mm A' 
-
         title: "Hangout - #{event.summary}"
         title_link: event.hangoutLink
-        text: start
+        text: event.moment.format 'h:mm A'
 
     request 
       method: 'POST'
@@ -101,4 +106,4 @@ authorize nconf.get('google'), (err, auth) ->
       body: slackMessage
     , (err, resp, body) ->
       console.log err if err
-      console.log 'Done!'
+      # console.log 'Done!'
