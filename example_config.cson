@@ -1,0 +1,10 @@
+google:
+  scopes: [
+    "https://www.googleapis.com/auth/calendar.readonly"
+  ]
+  credentials:
+    redirectUri: "urn:ietf:wg:oauth:2.0:oob"
+    clientId: "SOMEID.apps.googleusercontent.com"
+    clientSecret: "SECRET"
+slack:
+  webhook: 'https://hooks.slack.com/services/TOKEN'
