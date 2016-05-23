@@ -18,6 +18,9 @@
   "bugs": {
     "url": "https://github.com/szeller/hangout-meeting-slack/issues"
   },
+  "engines": {
+    "node" : ">=5.10.0"
+  },
   "homepage": "https://github.com/szeller/hangout-meeting-slack#readme",
   "dependencies": {
     "coffee-script": "^1.10.0",
