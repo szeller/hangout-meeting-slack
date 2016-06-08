@@ -95,9 +95,16 @@ authorize nconf.get('google'), (err, auth) ->
 
     slackMessage = 
       attachments: for event in events 
-        title: "Hangout - #{event.summary}"
-        title_link: event.hangoutLink
-        text: event.moment.format 'h:mm A'
+        msg = title: "#{event.moment.format('h:mm A')} - #{event.summary}"
+
+        if event.hangoutLink
+          hangoutHttp = event.hangoutLink
+
+          [ matched, domain, name, params ] = hangoutHttp.match /^[^_]*_\/([^/]*)\/([^?]*)\?(.*)/
+          hangoutNative = "com.google.hangouts://videochat?ei=#{name}&es=#{domain}&#{params}"
+          msg.text = "Hangout - <#{hangoutNative}|APP URL> / <#{hangoutHttp}|HTTP URL>"
+
+        msg
 
     request 
       method: 'POST'
